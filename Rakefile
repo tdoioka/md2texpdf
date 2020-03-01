@@ -1,11 +1,13 @@
 require "rake/clean"
 
+CLOBBER.include FileList["*.pdf"]
+
 MD_FILES = FileList["*.md"]
 PDF_FILES = MD_FILES.map{|file| file.ext(".pdf") }
 
 task :default => :pdf
 
-task :pdf => PDF_FILES
+multitask :pdf => PDF_FILES
 
 rule ".pdf" => ".md" do |t|
   sh "pandoc", t.source,
@@ -15,16 +17,23 @@ rule ".pdf" => ".md" do |t|
      #   footnotes : use footnotes
      #   definition_lists : use definition list
      "-f", "markdown+ignore_line_breaks+footnotes+definition_lists",
-     # Create Title page
-     "-V", "classoption=titlepage",
-     # Setting of Table of Contents. 
+     # Create title page.
+     "-V", "titlepage=true",
+     "-V", "titlepage-rule-color=53565a",
+     # Numbering chapter.
+     "-N",
+     # Output Infomation.
+     "-V", "CJKmainfont=IPAexGothic",
+     # Table of Contents.
+     "-V", "toc-own-page=true",
      "--table-of-contents", "--toc-depth=3",
-     # Numbering chapters and sections.
-     "-N", 
-     # Configure TEX to output Japanese.
+     # Enable crossref.
+     "-F", "pandoc-crossref",
+     # Code highlighter and show line number.
+     "--highlight-style", "tango",
+     # Output format.
      "--pdf-engine=lualatex",
-     "-V", "documentclass=bxjsarticle",
-     "-V", "classoption=pandoc",
+     "--template", "eisvogel",
      "-o", t.name
 end
 
