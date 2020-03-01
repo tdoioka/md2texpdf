@@ -8,7 +8,7 @@ task :default => :pdf
 task :pdf => PDF_FILES
 
 rule ".pdf" => ".md" do |t|
-  sh "pandoc", t.source, "-o", t.name,
+  sh "pandoc", t.source,
      # Configure imput files.
      #   markdown : input is markdown
      #   ignore_line_breaks : ignore line brakes
@@ -22,8 +22,9 @@ rule ".pdf" => ".md" do |t|
      # Numbering chapters and sections.
      "-N", 
      # Configure TEX to output Japanese.
-     "--latex-engine=lualatex",
-     "-V", "documentclass=ltjsarticle",
-     "-V", "luatexjapresetoptions=hiragino-pron"
+     "--pdf-engine=lualatex",
+     "-V", "documentclass=bxjsarticle",
+     "-V", "classoption=pandoc",
+     "-o", t.name
 end
 
