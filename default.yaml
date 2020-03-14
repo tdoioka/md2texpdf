@@ -1,0 +1,37 @@
+# Configure imput files.
+#   markdown : input is markdown
+#   ignore_line_breaks : ignore line brakes
+#   footnotes : use footnotes
+#   definition_lists : use definition list
+from: markdown+ignore_line_breaks+footnotes+definition_lists
+pdf-engine: lualatex
+template: eisvogel
+
+filters:
+  # Use crossref filtter
+  - pandoc-crossref
+
+variables:
+  # CJK(Chinese,Japanese,Korean) main font.
+  CJKmainfont: IPAexGothic
+  # Title page variables.
+  titlepage: true
+  titlepage-rule-color: 53565a
+  # TOC page standalone.
+  toc-own-page: true
+
+# Numbering chapters.
+number-sections: true
+
+# Create table of contents, config depth.
+table-of-contents: true
+toc-depth: 3
+
+# Code highlighting.
+highlight-style: tango
+listings: true
+## Can't add to yuml instead of argument.
+## There are effect to code block
+# metadata:
+#   - codeBlockCaptions
+#   - listings
