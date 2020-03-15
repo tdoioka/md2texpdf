@@ -75,6 +75,9 @@ cleanall: clean
 clean:
 	rm -rf $(INTROOT)
 
+hash:
+	@cat $(CMDSRCFILES) $(SMDFILES) | md5sum
+
 debug:
 	@echo "==== single markdowns"
 	@echo SMDDIRS..:$(SMDDIRS)
