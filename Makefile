@@ -26,7 +26,7 @@ SRCDIRS:=$(shell find $(SRCROOT) -name '.?*' -prune -o -type d)
 CATSUFFIX:=meta
 # Dirs to build single pdf.
 CSUFFILES:=$(strip $(foreach dir,$(SRCDIRS),$(firstword $(wildcard $(dir)/*.$(CATSUFFIX)))))
-CMDDIRS:=$(shell dirname $(CSUFFILES))
+CMDDIRS:=$(shell test -n "$(CSUFFILES)" && dirname $(CSUFFILES))
 # src files
 CMDSRCFILES:=$(foreach dir,$(CMDDIRS),$(wildcard $(dir)/*.md))
 # Int files
@@ -76,7 +76,7 @@ clean:
 	rm -rf $(INTROOT)
 
 hash:
-	@cat $(CMDSRCFILES) $(SMDFILES) | md5sum
+	@cat $(CMDSRCFILES) $(SMDFILES) | md5sum -
 
 debug:
 	@echo "==== single markdowns"
