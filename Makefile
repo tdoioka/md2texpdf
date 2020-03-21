@@ -25,7 +25,7 @@ BS:=md
 COMMON_BASE:=$(DEFAULT_YAML) $(realpath Makefile)
 
 # pandoc command
-PANDOC_CMD=pandoc $(PANDOCOPT) $< -o $@
+PANDOC_CMD=(cd $(dir $<) && pandoc $(PANDOCOPT) $(notdir $<) -o $(abspath $(@)))
 # PANDOC_CMD=touch $@
 
 # Silent
