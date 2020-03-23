@@ -10,9 +10,6 @@ errexit() {
 }
 
 main() {
-  # subprocess kill when exit
-  trap exittrap EXIT
-
   type inotifywait >& /dev/null \
     || errexit 'Not found inotifywait !! To install "sudo apt install inotify-tools".'
 
@@ -31,6 +28,8 @@ main() {
     make -j 4
     post=$(make hash)
 
+    echo "checksum: pre :$pre"
+    echo "checksum: post:$post"
     if [[ "${pre}" == "${post}" ]]; then
       # Create Watch target. refine evry wait.
       local filelist=($(find . -name '.?*' -prune -o \
