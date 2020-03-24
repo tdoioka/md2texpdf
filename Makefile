@@ -8,8 +8,13 @@ SRCROOT:=md
 INTROOT:=int
 DSTROOT:=pdf
 
-# pandoc arguments.
+# base files.
 DEFAULT_YAML:=$(realpath default.yaml)
+TEMPLATE_TEX:=$(realpath templates/pandoc-latex-template/eisvogel.tex)
+# All files dependend files
+COMMON_BASE:=$(realpath Makefile) $(DEFAULT_YAML) $(TEMPLATE_TEX)
+
+# pandoc arguments, use template.
 PANDOCOPT:=-d $(DEFAULT_YAML)
 
 # pandoc-crossref metadatas.
@@ -17,20 +22,23 @@ PANDOCOPT:=-d $(DEFAULT_YAML)
 PANDOCOPT+= \
 	-M codeBlockCaptions \
 	-M listings
+ifdef TEMPLATE_TEX
+PANDOCOPT+=--template=$(TEMPLATE_TEX)
+endif
+
 
 # Book directory suffix
 BS:=md
-
-# All files dependend files
-COMMON_BASE:=$(DEFAULT_YAML) $(realpath Makefile)
 
 # pandoc command
 PANDOC_CMD=(cd $(dir $<) && pandoc $(PANDOCOPT) $(notdir $<) -o $(abspath $(@)))
 # PANDOC_CMD=touch $@
 
+# output suffix
+OS:=pdf
+
 # Silent
-V:=@
-# V:=
+V?=@
 
 # default rule
 default: all
@@ -45,7 +53,7 @@ BMD_S_DIRS:=$(shell find $(SRCROOT) -name '.?*' \
 # Book MD intermediate files.
 BMD_I_FILES:=$(foreach dir,$(BMD_S_DIRS),$(dir:$(SRCROOT)%=$(INTROOT)%/book.md))
 # Book pdf files.
-BPDF_D_FILES:=$(BMD_S_DIRS:$(SRCROOT)%.$(BS)=$(DSTROOT)%.pdf)
+BPDF_D_FILES:=$(BMD_S_DIRS:$(SRCROOT)%.$(BS)=$(DSTROOT)%.$(OS))
 
 # Single md files dir.
 SMD_S_DIRS:=$(shell find $(SRCROOT) \( -name '.?*' -o -name "*.$(BS)" \) \
@@ -53,7 +61,7 @@ SMD_S_DIRS:=$(shell find $(SRCROOT) \( -name '.?*' -o -name "*.$(BS)" \) \
 # Single md files.
 SMD_S_FILES:=$(shell find $(SMD_S_DIRS) -maxdepth 1 -type f -name '*.md')
 # Single pdf files.
-SPDF_D_FILES:=$(SMD_S_FILES:$(SRCROOT)%.md=$(DSTROOT)%.pdf)
+SPDF_D_FILES:=$(SMD_S_FILES:$(SRCROOT)%.md=$(DSTROOT)%.$(OS))
 
 # All source files.
 SRC_FILES:=$(SMD_S_FILES)
@@ -88,7 +96,7 @@ $$(INT_MD_$(1)):$$(SRC_MDS_$(1)) $(COMMON_BASE)
 # Rule for $(INTROOT)/**/%.$(BS)/book.md => $(DSTROOT)/**/%.pdf
 SRC_SUBS_$(1):=$(shell find $(1) -mindepth 2 -type f)
 INT_SUBS_$(1):=$$(SRC_SUBS_$(1):$(SRCROOT)/%=$(INTROOT)/%)
-DST_PDF_$(1):=$(1:$(SRCROOT)/%.$(BS)=$(DSTROOT)/%.pdf)
+DST_PDF_$(1):=$(1:$(SRCROOT)/%.$(BS)=$(DSTROOT)/%.$(OS))
 $$(DST_PDF_$(1)):$$(INT_MD_$(1)) $$(INT_SUBS_$(1)) $(COMMON_BASE)
 	@echo "@@@@ PDFGEN [$$@] <= [$$(INT_MD_$(1)) $$(INT_SUBS_$(1))]"
 	$$(V)mkdir -p $$(dir $$@)
@@ -122,7 +130,7 @@ all: $(BPDF_D_FILES) $(SPDF_D_FILES)
 $(foreach dir,$(BMD_S_DIRS),$(eval $(call book_gen_rule,$(dir))))
 
 # create single pdf
-$(DSTROOT)/%.pdf:$(SRCROOT)/%.md $(COMMON_BASE)
+$(DSTROOT)/%.$(OS):$(SRCROOT)/%.md $(COMMON_BASE)
 	@echo "@@@@ PDFGEN [$@] <= [$<]"
 	$(V)mkdir -p $(dir $@)
 	$(V)$(PANDOC_CMD)

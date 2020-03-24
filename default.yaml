@@ -5,13 +5,12 @@
 #   definition_lists : use definition list
 from: markdown+ignore_line_breaks+footnotes+definition_lists
 pdf-engine: lualatex
-template: eisvogel
 
 filters:
   # Use crossref filtter
   - pandoc-crossref
 
-variables:
+metadata:
   # CJK(Chinese,Japanese,Korean) main font.
   CJKmainfont: IPAexGothic
   # Title page variables.
@@ -19,6 +18,13 @@ variables:
   titlepage-rule-color: 53565a
   # TOC page standalone.
   toc-own-page: true
+  # Centering captions.
+  caption-justification: centering
+  # ToC Title
+  toc-title: 目次
+  # ................
+  # Changelog
+  changelog-title: 更新履歴
 
 # Numbering chapters.
 number-sections: true
