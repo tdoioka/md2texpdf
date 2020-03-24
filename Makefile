@@ -10,18 +10,18 @@ DSTROOT:=pdf
 
 # base files.
 DEFAULT_YAML:=$(realpath default.yaml)
+CROSSREF_YAML:=$(realpath crossref.yaml)
 TEMPLATE_TEX:=$(realpath templates/pandoc-latex-template/eisvogel.tex)
 # All files dependend files
-COMMON_BASE:=$(realpath Makefile) $(DEFAULT_YAML) $(TEMPLATE_TEX)
+COMMON_BASE:=$(realpath Makefile) $(DEFAULT_YAML) $(CROSSREF_YAML) \
+	$(TEMPLATE_TEX)
 
 # pandoc arguments, use template.
 PANDOCOPT:=-d $(DEFAULT_YAML)
 
-# pandoc-crossref metadatas.
-# These dose not work in default.yaml
-PANDOCOPT+= \
-	-M codeBlockCaptions \
-	-M listings
+# Set pandoc-crossref options
+PANDOCOPT+=--filter pandoc-crossref -M "crossrefYaml=$(CROSSREF_YAML)"
+
 ifdef TEMPLATE_TEX
 PANDOCOPT+=--template=$(TEMPLATE_TEX)
 endif

@@ -6,10 +6,6 @@
 from: markdown+ignore_line_breaks+footnotes+definition_lists
 pdf-engine: lualatex
 
-filters:
-  # Use crossref filtter
-  - pandoc-crossref
-
 metadata:
   # CJK(Chinese,Japanese,Korean) main font.
   CJKmainfont: IPAexGothic
@@ -36,8 +32,3 @@ toc-depth: 3
 # Code highlighting.
 highlight-style: tango
 listings: true
-## Can't add to yuml instead of argument.
-## There are effect to code block
-# metadata:
-#   - codeBlockCaptions
-#   - listings
