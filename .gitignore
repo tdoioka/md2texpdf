@@ -1,4 +1,8 @@
+# backup files
 *~
-md
-pdf
-.work
+\#*\#
+
+# rootdir
+/md
+/pdf
+/.work
