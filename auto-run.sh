@@ -9,6 +9,13 @@ errexit() {
   exit 1
 }
 
+genflist() {
+  find . \( -name '.?*' -o -name 'templates' \) -prune -o -type d -print
+  find templates -name '*.tex' -type f
+  find . \( -name '.?*' -o -name 'templates' \) -prune -o -type f \
+       \( -name '*.md' -o -name 'Makefile' -o -name '*.yaml' \) -print
+}
+
 main() {
   type inotifywait >& /dev/null \
     || errexit 'Not found inotifywait !! To install "sudo apt install inotify-tools".'
@@ -32,12 +39,7 @@ main() {
     echo "checksum: post:$post"
     if [[ "${pre}" == "${post}" ]]; then
       # Create Watch target. refine evry wait.
-      local filelist=($(find . -name '.?*' -prune -o \
-                             -type d -print))
-      for pt in '*.md' 'Makefile' '*.yaml' '*.yml'; do
-        filelist+=($(find . -name '.?*' -prune -o \
-                          -type f -name "$pt" -print))
-      done
+      local filelist=($(genflist))
       # Waiting file changes
       echo -e "Waiting [${events[@]}]: ${filelist[@]}\n\n"
       inotifywait ${argev[@]} ${filelist[@]} \
