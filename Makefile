@@ -2,6 +2,8 @@
 # ..............................................................
 # Shell type.
 SHELL:=/bin/bash
+# OLD_SHELL := $(SHELL)
+# SHELL = $(if $@$^,$(warning [Making: $@] [Dep: $^] [Changed: $?]),)$(OLD_SHELL)
 
 # Base directories.
 SRCROOT:=md
@@ -12,30 +14,35 @@ DSTROOT:=pdf
 DEFAULT_YAML:=$(realpath default.yaml)
 CROSSREF_YAML:=$(realpath crossref.yaml)
 TEMPLATE_TEX:=$(realpath templates/pandoc-latex-template/eisvogel.tex)
+
 # All files dependend files
 COMMON_BASE:=$(realpath Makefile) $(DEFAULT_YAML) $(CROSSREF_YAML) \
 	$(TEMPLATE_TEX)
 
-# pandoc arguments, use template.
-PANDOCOPT:=-d $(DEFAULT_YAML)
-
-# Set pandoc-crossref options
-PANDOCOPT+=--filter pandoc-crossref -M "crossrefYaml=$(CROSSREF_YAML)"
-
+# Pandoc options.
+# ..............................................................
+PANDOCOPT:=
+# pandoc arguments, use with template.
+PANDOCOPT+=-d $(DEFAULT_YAML)
 ifdef TEMPLATE_TEX
 PANDOCOPT+=--template=$(TEMPLATE_TEX)
 endif
 
+# Set pandoc-crossref options
+PANDOCOPT+= \
+	--filter pandoc-crossref \
+	-M "crossrefYaml=$(CROSSREF_YAML)"
 
 # Book directory suffix
 BS:=md
 
 # pandoc command
 PANDOC_CMD=(cd $(dir $<) && pandoc $(PANDOCOPT) $(notdir $<) -o $(abspath $(@)))
-# PANDOC_CMD=touch $@
+# PANDOC_CMD=(cd $(dir $<) && cp $(notdir $<) $(abspath $(@)))
 
 # output suffix
-OS:=pdf
+OUTSUFFIXS:=pdf
+# OUTSUFFIXS:=pdf tex
 
 # Silent
 V?=@
@@ -53,7 +60,8 @@ BMD_S_DIRS:=$(shell find $(SRCROOT) -name '.?*' \
 # Book MD intermediate files.
 BMD_I_FILES:=$(foreach dir,$(BMD_S_DIRS),$(dir:$(SRCROOT)%=$(INTROOT)%/book.md))
 # Book pdf files.
-BPDF_D_FILES:=$(BMD_S_DIRS:$(SRCROOT)%.$(BS)=$(DSTROOT)%.$(OS))
+BOUT_D_FILES:=$(foreach \
+	suf,$(OUTSUFFIXS),$(BMD_S_DIRS:$(SRCROOT)%.$(BS)=$(DSTROOT)%.$(suf)))
 
 # Single md files dir.
 SMD_S_DIRS:=$(shell find $(SRCROOT) \( -name '.?*' -o -name "*.$(BS)" \) \
@@ -61,7 +69,8 @@ SMD_S_DIRS:=$(shell find $(SRCROOT) \( -name '.?*' -o -name "*.$(BS)" \) \
 # Single md files.
 SMD_S_FILES:=$(shell find $(SMD_S_DIRS) -maxdepth 1 -type f -name '*.md')
 # Single pdf files.
-SPDF_D_FILES:=$(SMD_S_FILES:$(SRCROOT)%.md=$(DSTROOT)%.$(OS))
+SOUT_D_FILES:=$(foreach \
+	suf,$(OUTSUFFIXS),$(SMD_S_FILES:$(SRCROOT)%.md=$(DSTROOT)%.$(suf)))
 
 # All source files.
 SRC_FILES:=$(SMD_S_FILES)
@@ -96,8 +105,9 @@ $$(INT_MD_$(1)):$$(SRC_MDS_$(1)) $(COMMON_BASE)
 # Rule for $(INTROOT)/**/%.$(BS)/book.md => $(DSTROOT)/**/%.pdf
 SRC_SUBS_$(1):=$(shell find $(1) -mindepth 2 -type f)
 INT_SUBS_$(1):=$$(SRC_SUBS_$(1):$(SRCROOT)/%=$(INTROOT)/%)
-DST_PDF_$(1):=$(1:$(SRCROOT)/%.$(BS)=$(DSTROOT)/%.$(OS))
-$$(DST_PDF_$(1)):$$(INT_MD_$(1)) $$(INT_SUBS_$(1)) $(COMMON_BASE)
+DST_OUT_$(1):=$(foreach \
+	suf,$(OUTSUFFIXS),$(1:$(SRCROOT)/%.$(BS)=$(DSTROOT)/%.$(suf)))
+$$(DST_OUT_$(1)):$$(INT_MD_$(1)) $$(INT_SUBS_$(1)) $(COMMON_BASE)
 	@echo "@@@@ PDFGEN [$$@] <= [$$(INT_MD_$(1)) $$(INT_SUBS_$(1))]"
 	$$(V)mkdir -p $$(dir $$@)
 	$$(V)$$(PANDOC_CMD)
@@ -113,27 +123,32 @@ debug_$(1):
 	@echo "@@@@ INT_MD    : $$(INT_MD_$(1))"
 	@echo "@@@@ SRC_SUBS  : $$(SRC_SUBS_$(1))"
 	@echo "@@@@ INT_SUBS  : $$(INT_SUBS_$(1))"
-	@echo "@@@@ DST_PDF   : $$(DST_PDF_$(1))"
+	@echo "@@@@ DST_OUT   : $$(DST_OUT_$(1))"
 endef
 
+define single_gen_rule
+$(DSTROOT)/%.$(1):$(SRCROOT)/%.$(BS) $(COMMON_BASE)
+	@echo "@@@@ PDFGEN [$$@] <= [$$<]"
+	$$(V)mkdir -p $$(dir $$@)
+	$$(V)$$(PANDOC_CMD)
+endef
 ################################################################
 # Rules
 ################################################################
 .PHONY: default all debug force $(DEBUG_TARGET)
 
-all: $(BPDF_D_FILES) $(SPDF_D_FILES)
+all: $(BOUT_D_FILES) $(SOUT_D_FILES)
+	@echo [$@] [$^]
 
 # Rule generate for
 # Rule for $(SRCROOT)/**/%.$(BS)/**/% => $(INTROOT)/**/%.$(BS)/**/%
 # Rule for $(SRCROOT)/**/%.$(BS)/*.md => $(INTROOT)/**/%.$(BS)/book.md
-# Rule for $(INTROOT)/**/%.$(BS)/book.md => $(DSTROOT)/**/%.pdf
+# Rule for $(INTROOT)/**/%.$(BS)/book.md => $(DSTROOT)/**/%.{$(OUTSUFFIXS)}
 $(foreach dir,$(BMD_S_DIRS),$(eval $(call book_gen_rule,$(dir))))
 
 # create single pdf
-$(DSTROOT)/%.$(OS):$(SRCROOT)/%.md $(COMMON_BASE)
-	@echo "@@@@ PDFGEN [$@] <= [$<]"
-	$(V)mkdir -p $(dir $@)
-	$(V)$(PANDOC_CMD)
+# Rule for $(SRCROOT)/**/%.md => $(DSTROOT)/**/%.{$(OUTSUFFIXS)}
+$(foreach suf,$(OUTSUFFIXS),$(eval $(call single_gen_rule,$(suf))))
 
 cleanall: clean
 	rm -rf $(DSTROOT)
@@ -149,9 +164,9 @@ DEBUG_TARGET:=$(foreach dir,$(BMD_S_DIRS),debug_$(dir))
 debug: $(DEBUG_TARGET)
 	@echo "@@@@ BMD_S_DIRS    : $(BMD_S_DIRS)"
 	@echo "@@@@ BMD_I_FILES   : $(BMD_I_FILES)"
-	@echo "@@@@ BPDF_D_FILES  : $(BPDF_D_FILES)"
+	@echo "@@@@ BOUT_D_FILES  : $(BOUT_D_FILES)"
 	@echo "@@@@ SMD_S_DIRS    : $(SMD_S_DIRS)"
 	@echo "@@@@ SMD_S_FILES   : $(SMD_S_FILES)"
-	@echo "@@@@ SPDF_D_FILES  : $(SPDF_D_FILES)"
+	@echo "@@@@ SOUT_D_FILES  : $(SOUT_D_FILES)"
 	@echo "@@@@ SRC_FILES     : $(SRC_FILES)"
 	@echo "@@@@ DEBUG_TARGET  : $(DEBUG_TARGET)"
