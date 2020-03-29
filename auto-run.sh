@@ -32,12 +32,7 @@ main() {
     echo "checksum: post:$post"
     if [[ "${pre}" == "${post}" ]]; then
       # Create Watch target. refine evry wait.
-      local filelist=($(find . -name '.?*' -prune -o \
-                             -type d -print))
-      for pt in '*.md' 'Makefile' '*.yaml' '*.yml'; do
-        filelist+=($(find . -name '.?*' -prune -o \
-                          -type f -name "$pt" -print))
-      done
+      local filelist=($(make srclist))
       # Waiting file changes
       echo -e "Waiting [${events[@]}]: ${filelist[@]}\n\n"
       inotifywait ${argev[@]} ${filelist[@]} \
