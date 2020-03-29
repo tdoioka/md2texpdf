@@ -74,7 +74,7 @@ SOUT_D_FILES:=$(foreach \
 
 # All source files.
 SRC_FILES:=$(SMD_S_FILES)
-
+SRC_DIRS:=$(shell find $(SRCROOT) -name '.?*' -prune -o -type d -print)
 
 #################################################################
 # Macro
@@ -158,6 +158,9 @@ clean:
 
 hash: $(SRC_FILES) $(COMMON_BASE)
 	@cat $^ | md5sum -
+
+srclist:
+	@echo $(SRC_DIRS) $(SRC_FILES) $(COMMON_BASE)
 
 # Debug target
 DEBUG_TARGET:=$(foreach dir,$(BMD_S_DIRS),debug_$(dir))
