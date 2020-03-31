@@ -33,6 +33,9 @@ PANDOCOPT+= \
 	--filter pandoc-crossref \
 	-M "crossrefYaml=$(CROSSREF_YAML)"
 
+# Set plantuml filter option
+PANDOCOPT+= --filter plantuml.py
+
 # Book directory suffix
 BS:=md
 
@@ -138,7 +141,7 @@ endef
 .PHONY: default all debug force $(DEBUG_TARGET)
 
 all: $(BOUT_D_FILES) $(SOUT_D_FILES)
-	@echo [$@] [$^]
+	@echo "@@@@ FINISHED [$@] <= [$^]"
 
 # Rule generate for
 # Rule for $(SRCROOT)/**/%.$(BS)/**/% => $(INTROOT)/**/%.$(BS)/**/%
