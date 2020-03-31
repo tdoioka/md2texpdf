@@ -30,16 +30,3 @@ RUN ghcup install \
  && cabal new-install pandoc \
  && cabal new-install pandoc-crossref
 
-# Get eisvogel template
-ADD https://github.com/Wandmalfarbe/pandoc-latex-template/releases/download/v1.4.0/Eisvogel-1.4.0.tar.gz /root/eisvogel/Eisvogel-1.4.0.tar.gz
-RUN mkdir -p ~/.pandoc/templates \
- && tar xf /root/eisvogel/Eisvogel-1.4.0.tar.gz -C ~/.pandoc/templates eisvogel.tex \
- && cp ~/.pandoc/templates/eisvogel.tex ~/.pandoc/templates/eisvogel.latex
-
-
-# 	libffi-dev \
-# 	libncurses-dev \
-# 	libtinfo5 \
-#	texlive-lang-cjk \
-#	texlive-fonts-recommended \
-#	texlive-fonts-extra \
