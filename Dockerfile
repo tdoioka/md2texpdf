@@ -1,45 +1,53 @@
 FROM ubuntu:18.04
 
+# ................................................................
+# Uses release versions.
+# ................................................................
+# pandoc version.
+ENV VER_PANDOC 2.9.2
+# pandoc-crossref version.
+ENV VER_PANDOC_CR v0.3.6.2
+# pandoc-crossref supoorted pandoc version.
+ENV VER_PANDOC_CR_PANDOC 2_9_2
+# plantuml version.
+ENV VER_PLANTUML 1.2020.5
+
+# ................................................................
+# Install by package manager.
+# ................................................................
 # Install texlive, inotify-tools
-# install libgmp-dev zlib1g-dev for pandoc
-# install cabal for pandoc and pandoc-filters.
-# install ghcup for cabal
-# install curl, xz-urtils, build-essential for ghcup.
+# install curl for pandoc / pandoc-filters.
 # install default-jre and graphviz for plantuml.
 # install git for pandocfilters.
+# install build-essential for makefile
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt update && apt install -y --no-install-recommends \
 	texlive-full \
 	curl \
-	xz-utils \
 	build-essential \
-	libgmp-dev \
-	zlib1g-dev \
 	inotify-tools \
 	default-jre \
 	graphviz \
 	git \
  && apt -y clean
 
-# Setup haskell package manager.
-# Intssall pandoc, pandoc-crossref.
-RUN mkdir -p ~/.ghcup/bin \
- && curl https://gitlab.haskell.org/haskell/ghcup/raw/master/ghcup > ~/.ghcup/bin/ghcup \
- && chmod +x ~/.ghcup/bin/ghcup
-ENV PATH "/root/.cabal/bin:/root/.ghcup/bin:$PATH"
-RUN ghcup install \
- && ghcup install-cabal \
- && ghcup set recommended \
- && cabal new-update \
- && cabal new-install cabal-install \
- && cabal new-install pandoc \
- && cabal new-install pandoc-crossref
+# ................................................................
+# Install from public release image.
+# ................................................................
+# Downlad / Install pandoc.
+RUN curl -o /tmp/pandoc.deb -JLsS \
+	https://github.com/jgm/pandoc/releases/download/${VER_PANDOC}/pandoc-${VER_PANDOC}-1-amd64.deb \
+ && dpkg -i /tmp/pandoc.deb
+
+# Download / Install pandoc-crossref.
+RUN curl -o /tmp/pandoc-cross.tar.gz -JLsS \
+	https://github.com/lierdakil/pandoc-crossref/releases/download/${VER_PANDOC_CR}/linux-pandoc_${VER_PANDOC_CR_PANDOC}.tar.gz \
+ && tar xf /tmp/pandoc-cross.tar.gz -C /usr/local/bin
 
 # Download / Install plantuml.
-ENV PLANTUML_VERSION 1.2020.5
 RUN mkdir -p /usr/share/plantuml \
  && curl -o /usr/share/plantuml/plantuml.jar -JLsS \
-	http://sourceforge.net/projects/plantuml/files/plantuml.${PLANTUML_VERSION}.jar/download
+	http://sourceforge.net/projects/plantuml/files/plantuml.${VER_PLANTUML}.jar/download
 
 # To able to use plantuml pandocfilter for Japanese files.
 ENV LC_CTYPE=C.UTF-8
