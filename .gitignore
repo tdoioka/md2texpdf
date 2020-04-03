@@ -1,9 +1,12 @@
-# backup files
+# backup files.
 *~
 \#*\#
 
-# rootdir
+# root dirs.
 /md
 /int
 /pdf
 /.work
+
+# auto generate files.
+/plantuml-images
