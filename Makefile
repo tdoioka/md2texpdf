@@ -1,26 +1,31 @@
-# Fixed assignments.
-# ..............................................................
 # Shell type.
 SHELL:=/bin/bash
-# OLD_SHELL := $(SHELL)
-# SHELL = $(if $@$^,$(warning [Making: $@] [Dep: $^] [Changed: $?]),)$(OLD_SHELL)
 
-# Base directories.
-SRCROOT:=md
-INTROOT:=int
-DSTROOT:=pdf
+SRCROOT := md
+INTROOT := int
+DSTROOT := pdf
 
-# base files.
+# base files
 DEFAULT_YAML:=$(realpath default.yaml)
 CROSSREF_YAML:=$(realpath crossref.yaml)
 TEMPLATE_TEX:=$(realpath templates/pandoc-latex-template/eisvogel.tex)
-
 # All files dependend files
 COMMON_BASE:=$(realpath Makefile) $(DEFAULT_YAML) $(CROSSREF_YAML) \
 	$(TEMPLATE_TEX)
 
+# suffixs
+SG_SUF  := md
+PL_SUF  := $(SG_SUF)
+PDF_SUF := pdf
+TEX_SUF := tex
+
+# verbose
+V := @
+
+default: all
+################################################################
 # Pandoc options.
-# ..............................................................
+################################################################
 PANDOCOPT:=
 # pandoc arguments, use with template.
 PANDOCOPT+=-d $(DEFAULT_YAML)
@@ -36,147 +41,186 @@ PANDOCOPT+= \
 # Set plantuml filter option
 PANDOCOPT+= --filter plantuml.py
 
-# Book directory suffix
-BS:=md
-
 # pandoc command
 PANDOC_CMD=(cd $(dir $<) && pandoc $(PANDOCOPT) $(notdir $<) -o $(abspath $(@)))
 # PANDOC_CMD=(cd $(dir $<) && cp $(notdir $<) $(abspath $(@)))
 
-# output suffix
-OUTSUFFIXS:=pdf
-# OUTSUFFIXS:=pdf tex
-
-# Silent
-V?=@
-
-# default rule
-default: all
-
-#################################################################
-# Automatic calculation below here
-#################################################################
-
-# Book DIRS to create one PDF.
-BMD_S_DIRS:=$(shell find $(SRCROOT) -name '.?*' \
-	-prune -o -type d -name "*.$(BS)" ! -path "*.$(BS)/*" -print)
-# Book MD intermediate files.
-BMD_I_FILES:=$(foreach dir,$(BMD_S_DIRS),$(dir:$(SRCROOT)%=$(INTROOT)%/book.md))
-# Book pdf files.
-BOUT_D_FILES:=$(foreach \
-	suf,$(OUTSUFFIXS),$(BMD_S_DIRS:$(SRCROOT)%.$(BS)=$(DSTROOT)%.$(suf)))
-
-# Single md files dir.
-SMD_S_DIRS:=$(shell find $(SRCROOT) \( -name '.?*' -o -name "*.$(BS)" \) \
-	-prune -o -type d -print)
-# Single md files.
-SMD_S_FILES:=$(shell find $(SMD_S_DIRS) -maxdepth 1 -type f -name '*.md')
-# Single pdf files.
-SOUT_D_FILES:=$(foreach \
-	suf,$(OUTSUFFIXS),$(SMD_S_FILES:$(SRCROOT)%.md=$(DSTROOT)%.$(suf)))
-
-# All source files.
-SRC_FILES:=$(SMD_S_FILES)
-SRC_DIRS:=$(shell find $(SRCROOT) -name '.?*' -prune -o -type d -print)
-
-#################################################################
-# Macro
-#################################################################
-# BMD_S_DIRS => BMD_I_FILES => BMD_D_FILES
-# $1 = A book directory name with $(BS) suffix
-define book_gen_rule
-# Copy assets files to intermediate. (for estensible)
-# Rule for $(SRCROOT)/**/%.$(BS)/**/% => $(INTROOT)/**/%.$(BS)/**/%
-INT_DIR_$(1):=$(1:$(SRCROOT)/%=$(INTROOT)/%)
-$$(INT_DIR_$(1))/%:$(1)/% $(COMMON_BASE)
-	@echo "@@@@   SUBSGEN [$$@] <= [$$<]"
-	@$$(V)mkdir -p $$(dir $$@)
-	@$$(V)cp $$< $$@
-# Concatnate md files to intermediate.
-# Rule for $(SRCROOT)/**/%.$(BS)/*.md => $(INTROOT)/**/%.$(BS)/book.md
-SRC_MDS_$(1):=$(shell find $(1) -maxdepth 1 -type f -name "*.md")
-INT_MD_$(1):=$$(INT_DIR_$(1))/book.md
-$$(INT_MD_$(1)):$$(SRC_MDS_$(1)) $(COMMON_BASE)
-	@echo "@@@@   IMDGEN [$$@] <= [$$(SRC_MDS_$(1))]"
-	$$(V)mkdir -p $$(dir $$@)
-	$$(V)if [[ -n "$$(SRC_MDS_$(1))" ]]; then\
-		cat $$(SRC_MDS_$(1)) > $$@;\
-	else\
-		touch $$@;\
-	fi
-# Build pdf.
-# Rule for $(INTROOT)/**/%.$(BS)/book.md => $(DSTROOT)/**/%.pdf
-SRC_SUBS_$(1):=$(shell find $(1) -mindepth 2 -type f)
-INT_SUBS_$(1):=$$(SRC_SUBS_$(1):$(SRCROOT)/%=$(INTROOT)/%)
-DST_OUT_$(1):=$(foreach \
-	suf,$(OUTSUFFIXS),$(1:$(SRCROOT)/%.$(BS)=$(DSTROOT)/%.$(suf)))
-$$(DST_OUT_$(1)):$$(INT_MD_$(1)) $$(INT_SUBS_$(1)) $(COMMON_BASE)
-	@echo "@@@@ PDFGEN [$$@] <= [$$(INT_MD_$(1)) $$(INT_SUBS_$(1))]"
-	$$(V)mkdir -p $$(dir $$@)
-	$$(V)$$(PANDOC_CMD)
-
-# Union of source files for hash calculation.
-SRC_FILES+=$$(SRC_SUBS_$(1)) $$(SRC_MDS_$(1))
-
-# for Debugging
-debug_$(1):
-	@echo "@@@@ debug_$(1) ::"
-	@echo "@@@@ INT_DIR   : $$(INT_DIR_$(1))"
-	@echo "@@@@ SRC_MDS   : $$(SRC_MDS_$(1))"
-	@echo "@@@@ INT_MD    : $$(INT_MD_$(1))"
-	@echo "@@@@ SRC_SUBS  : $$(SRC_SUBS_$(1))"
-	@echo "@@@@ INT_SUBS  : $$(INT_SUBS_$(1))"
-	@echo "@@@@ DST_OUT   : $$(DST_OUT_$(1))"
+################################################################
+# Logging
+################################################################
+LOG := log
+DATE_FMT :="+%F-%T.%N\(%Z\)"
+define _date
+	date "$(DATE_FMT) $(1): $(2)"
 endef
 
-define single_gen_rule
-$(DSTROOT)/%.$(1):$(SRCROOT)/%.$(BS) $(COMMON_BASE)
-	@echo "@@@@ PDFGEN [$$@] <= [$$<]"
+# Logging in task command to save.
+define inflog
+	@$(call _date,INF,$(if $(2),$(2),----) $(1)) | tee -a $(LOG)
+endef
+define dbglog
+	@$(if $(DEBUG),$(call _date,DBG,$(if $(2),$(2),----) $(1)) | tee -a $(LOG))
+endef
+
+# Pre task command and post task command.
+define pretask
+	$(call inflog,$@$(if $^$|, <= [$^$(if $(and $^,$|), )$|]),TASK)
+	$(if $?,$(call dbglog,updated [$?]))
+endef
+define posttask
+	$(call dbglog,$@,DONE)
+endef
+
+################################################################
+# single buid
+################################################################
+SG_SRC_FILES := $(shell find $(SRCROOT) -type f -name '*.$(SG_SUF)' | grep -ve '.*\.$(PL_SUF)/')
+SGR_SRC_FILES := $(shell find $(SRCROOT) \( \
+	-type d -name '*.$(PL_SUF)' -o \
+	-type f -name '*.$(SG_SUF)' -o \
+	-name '.*' -o -name '*~' \) -prune -o -type f -print)
+
+# inter sg files
+SG_SRC_PT     := $(SRCROOT)/%.$(SG_SUF)
+SG_INT_PT     := $(INTROOT)/%.$(SG_SUF)
+SG_INT_FILES  := $(SG_SRC_FILES:$(SG_SRC_PT)=$(SG_INT_PT))
+SGR_SRC_PT    := $(SRCROOT)/%
+SGR_INT_PT    := $(INTROOT)/%
+SGR_INT_FILES := $(SGR_SRC_FILES:$(SGR_SRC_PT)=$(SGR_INT_PT))
+# output sg files
+SG_PDF_PT     := $(DSTROOT)/%.$(PDF_SUF)
+SG_PDF_FILES  := $(SG_SRC_FILES:$(SG_SRC_PT)=$(SG_PDF_PT))
+SG_TEX_PT     := $(DSTROOT)/%.$(TEX_SUF)
+SG_TEX_FILES  := $(SG_SRC_FILES:$(SG_SRC_PT)=$(SG_TEX_PT))
+
+# crude dependency estimation with grep to resouce.
+define sgrc_deps
+$(1)_sgrc_deps := $(shell grep -le $(notdir $(1)) $(SG_SRC_FILES))
+# $(1)_sgrc_outs := $$($(1)_sgrc_deps:$$(SG_SRC_PT)=$$(SG_PDF_PT))
+# $(1)_sgrc_rcs  := $(1:$(SGR_SRC_PT)=$(SGR_INT_PT))
+# $$($(1)_sgrc_outs): $$($(1)_sgrc_rcs)
+$$($(1)_sgrc_deps:$$(SG_SRC_PT)=$$(SG_PDF_PT)): $(1:$(SGR_SRC_PT)=$(SGR_INT_PT))
+endef
+$(foreach file,$(sort $(SGR_SRC_FILES)),$(eval $(call sgrc_deps,$(file))))
+
+# intermediates.
+WORD=[a-zA-Z0-9][a-zA-Z0-9]*
+SPACE=[ \f\n\r\t]*
+$(SG_INT_FILES): $(SG_INT_PT): $(SG_SRC_PT) $(COMMON_BASE)
+	$(call pretask)
+	$(V)mkdir -p $(dir $@)
+	$(V)sed -e 's@^```\(`*\)\($(WORD)\)@```\1{.\2}@g' \
+		-e 's@^\(```[^}]*\)[}]$(SPACE)[{]\(.*\)$$@\1 \2@g' \
+		$< > $@ || rm $@
+	$(call posttask)
+
+$(SGR_INT_FILES): $(SGR_INT_PT): $(SGR_SRC_PT)
+	$(V)mkdir -p $(dir $@)
+	$(V)ln -s $$(realpath -s --relative-to=$(dir $@) $<) $@
+
+# outputs.
+$(SG_PDF_FILES): $(SG_PDF_PT): $(SG_INT_PT)
+	$(call pretask)
+	$(V)mkdir -p $(dir $@)
+	$(V)$(PANDOC_CMD)
+	$(call posttask)
+$(SG_TEX_FILES): $(SG_TEX_PT): $(SG_INT_PT)
+	$(V)mkdir -p $(dir $@)
+	$(V)$(PANDOC_CMD)
+
+################################################################
+# book buid
+################################################################
+PL_SRC_DIRS  := $(shell find $(SRCROOT) -type d -name '*.$(PL_SUF)')
+PL_SRC_FILES :=
+# inte pl files
+PL_SRC_PT     := $(SRCROOT)/%.$(PL_SUF)
+PL_INT_PT     := $(INTROOT)/%.$(PL_SUF)/all.$(SG_SUF)
+PL_INT_FILES  := $(PL_SRC_DIRS:$(PL_SRC_PT)=$(PL_INT_PT))
+PLR_SRC_PT    := $(SRCROOT)/%
+PLR_INT_PT    := $(INTROOT)/%
+# output pl files
+PL_PDF_PT     := $(DSTROOT)/%.$(PDF_SUF)
+PL_PDF_FILES  := $(PL_SRC_DIRS:$(PL_SRC_PT)=$(PL_PDF_PT))
+PL_TEX_PT     := $(DSTROOT)/%.$(TEX_SUF)
+PL_TEX_FILES  := $(PL_SRC_DIRS:$(PL_SRC_PT)=$(PL_TEX_PT))
+
+define pl_src_files
+# sources.
+$(1)_src_deps := $(sort $(wildcard $(1)/*.$(SG_SUF)))
+PL_SRC_FILES  += $$($(1)_src_deps)
+$(1)_src_rs   := $(shell find $(1) \( \
+	-type f -name '*.$(SG_SUF)' -o \
+	-name '*~' -o -name '.*' \) -prune -o -type f -print)
+# intermediates.
+$(1)_int      := $(1:$(PL_SRC_PT)=$(PL_INT_PT))
+$(1)_int_rs   := $$($(1)_src_rs:$(PLR_SRC_PT)=$(PLR_INT_PT))
+# outputs.
+$(1)_pdf      := $(1:$(PL_SRC_PT)=$(PL_PDF_PT))
+$(1)_tex      := $(1:$(PL_SRC_PT)=$(PL_TEX_PT))
+# intermediates.
+$$($(1)_int): $$($(1)_src_deps)
+	$$(call pretask)
+	$$(V)mkdir -p $$(dir $$@)
+	$$(V)cat $$(filter-out $$(COMMON_BASE),$$^) | \
+		sed -e 's@^```\(`*\)\($$(WORD)\)@```\1{.\2}@g' \
+		-e 's@^\(```[^}]*\)[}]$$(SPACE)[{]\(.*\)$$$$@\1 \2@g' \
+		> $$@ || rm $$@
+	$$(call posttask)
+$$($(1)_int_rs): $$($(1)_src_rs)
+	$$(V)mkdir -p $$(dir $$@)
+	$$(V)ln -s $$$$(realpath -s --relative-to=$$(dir $$@) $$<) $$@
+# outputs.
+$$($(1)_pdf): $$($(1)_int) $$($(1)_int_rs)
+	$$(call pretask)
+	$$(V)mkdir -p $$(dir $$@)
+	$$(V)$$(PANDOC_CMD)
+	$$(call posttask)
+$$($(1)_tex): $$($(1)_int) $$($(1)_int_rs)
 	$$(V)mkdir -p $$(dir $$@)
 	$$(V)$$(PANDOC_CMD)
 endef
+$(foreach srcdir,$(PL_SRC_DIRS),$(eval $(call pl_src_files,$(srcdir))))
+
 ################################################################
-# Rules
+# utilities
 ################################################################
-.PHONY: default all debug force $(DEBUG_TARGET)
-
-all: $(BOUT_D_FILES) $(SOUT_D_FILES)
-	@echo "@@@@ FINISHED [$@] <= [$^]"
-
-# Rule generate for
-# Rule for $(SRCROOT)/**/%.$(BS)/**/% => $(INTROOT)/**/%.$(BS)/**/%
-# Rule for $(SRCROOT)/**/%.$(BS)/*.md => $(INTROOT)/**/%.$(BS)/book.md
-# Rule for $(INTROOT)/**/%.$(BS)/book.md => $(DSTROOT)/**/%.{$(OUTSUFFIXS)}
-$(foreach dir,$(BMD_S_DIRS),$(eval $(call book_gen_rule,$(dir))))
-
-# create single pdf
-# Rule for $(SRCROOT)/**/%.md => $(DSTROOT)/**/%.{$(OUTSUFFIXS)}
-$(foreach suf,$(OUTSUFFIXS),$(eval $(call single_gen_rule,$(suf))))
-
-cleanall: clean
-	rm -rf $(DSTROOT)
-
-clean:
-	rm -rf $(INTROOT)
-
-hash: $(SRC_FILES) $(COMMON_BASE)
+.PHONY: hash srclist run
+hash: $(SG_SRC_FILES) $(PL_SRC_FILES) $(COMMON_BASE)
 	@cat $^ | md5sum -
 
 srclist:
-	@echo $(SRC_DIRS) $(SRC_FILES) $(COMMON_BASE)
+	@echo $(SG_SRC_FILES) $(PL_SRC_FILES) $(COMMON_BASE)
 
-# Debug target
-DEBUG_TARGET:=$(foreach dir,$(BMD_S_DIRS),debug_$(dir))
-debug: $(DEBUG_TARGET)
-	@echo "@@@@ BMD_S_DIRS    : $(BMD_S_DIRS)"
-	@echo "@@@@ BMD_I_FILES   : $(BMD_I_FILES)"
-	@echo "@@@@ BOUT_D_FILES  : $(BOUT_D_FILES)"
-	@echo "@@@@ SMD_S_DIRS    : $(SMD_S_DIRS)"
-	@echo "@@@@ SMD_S_FILES   : $(SMD_S_FILES)"
-	@echo "@@@@ SOUT_D_FILES  : $(SOUT_D_FILES)"
-	@echo "@@@@ SRC_FILES     : $(SRC_FILES)"
-	@echo "@@@@ DEBUG_TARGET  : $(DEBUG_TARGET)"
-
-.PHONY: run
 run:
-	$(MAKE) -C docker run
+	$(V)$(MAKE) -C docker run
+
+################################################################
+# clean
+################################################################
+.PHONY: clean
+distclean: clean
+	-rm -rf $(DSTROOT)
+clean:
+	-rm -rf $(INTROOT)
+
+################################################################
+# all
+################################################################
+.PHONY: all
+all: $(SG_PDF_FILES) $(PL_PDF_FILES)
+
+################################################################
+# debug
+################################################################
+define dbg
+	$(info > INFO: $(1): $($(1)))
+endef
+.PHONY: debug
+debug:
+	$(info @@@@@@@@@@@@@@@@)
+	$(call dbg,SG_PDF_FILES)
+	$(call dbg,PL_PDF_FILES)
+	$(call dbg,SG_SRC_FILES)
+	$(call dbg,PL_SRC_FILES)
+	$(info @@@@@@@@@@@@@@@@)
