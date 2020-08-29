@@ -176,3 +176,7 @@ debug: $(DEBUG_TARGET)
 	@echo "@@@@ SOUT_D_FILES  : $(SOUT_D_FILES)"
 	@echo "@@@@ SRC_FILES     : $(SRC_FILES)"
 	@echo "@@@@ DEBUG_TARGET  : $(DEBUG_TARGET)"
+
+.PHONY: run
+run:
+	$(MAKE) -C docker run

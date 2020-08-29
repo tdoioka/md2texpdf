@@ -7,7 +7,7 @@ FROM ubuntu:18.04
 ENV VER_PANDOC 2.9.2
 # pandoc-crossref version.
 ENV VER_PANDOC_CR v0.3.6.2
-# pandoc-crossref supoorted pandoc version.
+# pandoc-crossref supported pandoc version.
 ENV VER_PANDOC_CR_PANDOC 2_9_2
 # plantuml version.
 ENV VER_PLANTUML 1.2020.5
@@ -15,13 +15,14 @@ ENV VER_PLANTUML 1.2020.5
 # ................................................................
 # Install by package manager.
 # ................................................................
-# Install texlive, inotify-tools
+# Install texlive, inotify-tools, gosu.
 # install curl for pandoc / pandoc-filters.
 # install default-jre and graphviz for plantuml.
 # install git for pandocfilters.
-# install build-essential for makefile
+# install build-essential for makefile.
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt update && apt install -y --no-install-recommends \
+	gosu \
 	texlive-full \
 	curl \
 	build-essential \
@@ -60,3 +61,10 @@ RUN git clone https://github.com/jgm/pandocfilters.git \
 	-e "s@plantuml.jar@/usr/share/plantuml/plantuml.jar@g" \
 	> /usr/local/bin/plantuml.py \
  && chmod a+x /usr/local/bin/plantuml.py
+
+# Match user infomation to host directory
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN useradd -U -m user \
+ && chmod a+x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD /bin/bash
