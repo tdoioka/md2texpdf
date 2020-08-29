@@ -21,6 +21,11 @@ metadata:
   # ................
   # Changelog
   changelog-title: 更新履歴
+  # Titlepage Stamp field size
+  stampfield: 3.5em
+  # parindent
+  indent: true
+  indentfirst: true
 
 # Numbering chapters.
 number-sections: true
