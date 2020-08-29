@@ -63,7 +63,7 @@ RUN git clone https://github.com/jgm/pandocfilters.git \
  && chmod a+x /usr/local/bin/plantuml.py
 
 # Match user infomation to host directory
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN useradd -U -m user \
  && chmod a+x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
