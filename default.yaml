@@ -8,7 +8,7 @@ pdf-engine: lualatex
 
 metadata:
   # CJK(Chinese,Japanese,Korean) main font.
-  CJKmainfont: IPAexGothic
+  CJKmainfont: HaranoAjiGothic
   # Title page variables.
   titlepage: true
   titlepage-rule-color: 53565a
@@ -21,6 +21,11 @@ metadata:
   # ................
   # Changelog
   changelog-title: 更新履歴
+  # Titlepage Stamp field size
+  stampfield: 3.5em
+  # parindent
+  indent: true
+  indentfirst: true
 
 # Numbering chapters.
 number-sections: true

@@ -1,11 +1,11 @@
 SHELL=/bin/bash
 
 IMG_NAME  ?= md2texpdf
-IMG_VER   ?= 0.2
+IMG_VER   ?= 0.4
 CONT_NAME ?= $(IMG_NAME)
 
 
-IMG_HASH=$(shell docker image ls -q $(IMG_NAME))
+IMG_HASH=$(shell docker image ls -q $(IMG_NAME):$(IMG_VER))
 WORK_DIR=$(shell realpath $(PWD))
 
 .PHONY: all
