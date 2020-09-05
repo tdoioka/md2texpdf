@@ -19,7 +19,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	graphviz \
 	git \
 	build-essential \
- && apt-get -y clean
+	python3 \
+	python3-pip \
+ && apt-get -y clean \
+ && update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1 \
+ && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
 # ................................................................
 # Download and Install CJK fonts for TeX Live
@@ -67,8 +71,8 @@ RUN mkdir -p /usr/share/plantuml \
 ENV LC_CTYPE=C.UTF-8
 
 # Download / Install pandocfilters.
-RUN git clone https://github.com/jgm/pandocfilters.git -b ${VER_PANDOC_FILTERS} \
- && cd pandocfilters \
+RUN git clone https://github.com/jgm/pandocfilters.git -b ${VER_PANDOC_FILTERS} /usr/share/pandocfilters \
+ && cd /usr/share/pandocfilters \
  && python setup.py install \
  && sed examples/plantuml.py \
     -e "s@plantuml.jar@/usr/share/plantuml/plantuml.jar@g" \
