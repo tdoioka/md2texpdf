@@ -37,13 +37,13 @@ RUN curl -L http://mirrors.ctan.org/fonts/haranoaji.zip -o /tmp/haranoaji.zip \
 # Uses release versions.
 # ................................................................
 # pandoc version.
-ENV VER_PANDOC 2.9.2
+ENV VER_PANDOC 2.10.1
 # pandoc-crossref version.
-ENV VER_PANDOC_CR v0.3.6.2
-# pandoc-crossref supported pandoc version.
-ENV VER_PANDOC_CR_PANDOC 2_9_2
+ENV VER_PANDOC_CR v0.3.8.1
+# pandoc-filters version.
+ENV VER_PANDOC_FILTERS 1.4.2
 # plantuml version.
-ENV VER_PLANTUML 1.2020.5
+ENV VER_PLANTUML 1.2020.16
 
 # ................................................................
 # Install from public release image.
@@ -54,9 +54,9 @@ RUN curl -o /tmp/pandoc.deb -JLsS \
  && dpkg -i /tmp/pandoc.deb
 
 # Download / Install pandoc-crossref.
-RUN curl -o /tmp/pandoc-cross.tar.gz -JLsS \
-    https://github.com/lierdakil/pandoc-crossref/releases/download/${VER_PANDOC_CR}/linux-pandoc_${VER_PANDOC_CR_PANDOC}.tar.gz \
- && tar xf /tmp/pandoc-cross.tar.gz -C /usr/local/bin
+RUN curl -o /tmp/pandoc-cross.tar.xz -JLsS \
+    https://github.com/lierdakil/pandoc-crossref/releases/download/${VER_PANDOC_CR}/pandoc-crossref-Linux.tar.xz \
+ && tar xf /tmp/pandoc-cross.tar.xz -C /usr/local/bin
 
 # Download / Install plantuml.
 RUN mkdir -p /usr/share/plantuml \
@@ -67,7 +67,7 @@ RUN mkdir -p /usr/share/plantuml \
 ENV LC_CTYPE=C.UTF-8
 
 # Download / Install pandocfilters.
-RUN git clone https://github.com/jgm/pandocfilters.git \
+RUN git clone https://github.com/jgm/pandocfilters.git -b ${VER_PANDOC_FILTERS} \
  && cd pandocfilters \
  && python setup.py install \
  && sed examples/plantuml.py \
