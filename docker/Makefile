@@ -27,7 +27,8 @@ clean:
 	[[ -z "$(IMG_HASH)" ]] || \
 		docker rmi '$(IMG_NAME):$(IMG_VER)'
 
-.PHONY: connect
+.PHONY: connect connectasroot
 connect:
 	docker exec -u user -it $(CONT_NAME) /bin/bash
-
+connectasroot:
+	docker exec -it $(CONT_NAME) /bin/bash
