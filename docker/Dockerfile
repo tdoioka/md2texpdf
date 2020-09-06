@@ -1,18 +1,6 @@
 FROM ubuntu:18.04
 
 # ................................................................
-# Uses release versions.
-# ................................................................
-# pandoc version.
-ENV VER_PANDOC 2.9.2
-# pandoc-crossref version.
-ENV VER_PANDOC_CR v0.3.6.2
-# pandoc-crossref supported pandoc version.
-ENV VER_PANDOC_CR_PANDOC 2_9_2
-# plantuml version.
-ENV VER_PLANTUML 1.2020.5
-
-# ................................................................
 # Install by package manager.
 # ................................................................
 # Install texlive, inotify-tools, gosu, zip.
@@ -34,6 +22,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && apt-get -y clean
 
 # ................................................................
+# Download and Install CJK fonts for TeX Live
+# ................................................................
+RUN curl -L http://mirrors.ctan.org/fonts/haranoaji.zip -o /tmp/haranoaji.zip \
+ && curl -L http://mirrors.ctan.org/fonts/haranoaji-extra.zip -o /tmp/haranoaji-extra.zip \
+ && mkdir -p /tmp/haranoaji \
+ && unzip /tmp/haranoaji.zip -d /tmp/haranoaji \
+ && unzip /tmp/haranoaji-extra.zip -d /tmp/haranoaji \
+ && mkdir -p $(kpsewhich --var-value=TEXMFLOCAL)/fonts/opentype/public/haranoaji/ \
+ && cp /tmp/haranoaji/haranoaji*/*.otf $(kpsewhich --var-value=TEXMFLOCAL)/fonts/opentype/public/haranoaji/ \
+ && mktexlsr
+
+# ................................................................
+# Uses release versions.
+# ................................................................
+# pandoc version.
+ENV VER_PANDOC 2.10.1
+# pandoc-crossref version.
+ENV VER_PANDOC_CR v0.3.8.1
+# pandoc-filters version.
+ENV VER_PANDOC_FILTERS 1.4.2
+# plantuml version.
+ENV VER_PLANTUML 1.2020.16
+
+# ................................................................
 # Install from public release image.
 # ................................................................
 # Downlad / Install pandoc.
@@ -42,9 +54,9 @@ RUN curl -o /tmp/pandoc.deb -JLsS \
  && dpkg -i /tmp/pandoc.deb
 
 # Download / Install pandoc-crossref.
-RUN curl -o /tmp/pandoc-cross.tar.gz -JLsS \
-    https://github.com/lierdakil/pandoc-crossref/releases/download/${VER_PANDOC_CR}/linux-pandoc_${VER_PANDOC_CR_PANDOC}.tar.gz \
- && tar xf /tmp/pandoc-cross.tar.gz -C /usr/local/bin
+RUN curl -o /tmp/pandoc-cross.tar.xz -JLsS \
+    https://github.com/lierdakil/pandoc-crossref/releases/download/${VER_PANDOC_CR}/pandoc-crossref-Linux.tar.xz \
+ && tar xf /tmp/pandoc-cross.tar.xz -C /usr/local/bin
 
 # Download / Install plantuml.
 RUN mkdir -p /usr/share/plantuml \
@@ -55,7 +67,7 @@ RUN mkdir -p /usr/share/plantuml \
 ENV LC_CTYPE=C.UTF-8
 
 # Download / Install pandocfilters.
-RUN git clone https://github.com/jgm/pandocfilters.git \
+RUN git clone https://github.com/jgm/pandocfilters.git -b ${VER_PANDOC_FILTERS} \
  && cd pandocfilters \
  && python setup.py install \
  && sed examples/plantuml.py \
@@ -63,17 +75,9 @@ RUN git clone https://github.com/jgm/pandocfilters.git \
     > /usr/local/bin/plantuml.py \
  && chmod a+x /usr/local/bin/plantuml.py
 
-# Download and Install CJK fonts for TeX Live
-RUN curl -L http://mirrors.ctan.org/fonts/haranoaji.zip -o /tmp/haranoaji.zip \
- && curl -L http://mirrors.ctan.org/fonts/haranoaji-extra.zip -o /tmp/haranoaji-extra.zip \
- && mkdir -p /tmp/haranoaji \
- && unzip /tmp/haranoaji.zip -d /tmp/haranoaji \
- && unzip /tmp/haranoaji-extra.zip -d /tmp/haranoaji \
- && mkdir -p $(kpsewhich --var-value=TEXMFLOCAL)/fonts/opentype/public/haranoaji/ \
- && cp /tmp/haranoaji/haranoaji*/*.otf $(kpsewhich --var-value=TEXMFLOCAL)/fonts/opentype/public/haranoaji/ \
- && mktexlsr
-
+# ................................................................
 # Match user infomation to host directory
+# ................................................................
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN useradd -U -m user \
  && chmod a+x /usr/local/bin/entrypoint.sh
