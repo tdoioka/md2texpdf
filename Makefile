@@ -9,9 +9,10 @@ DSTROOT := pdf
 DEFAULT_YAML:=$(realpath default.yaml)
 CROSSREF_YAML:=$(realpath crossref.yaml)
 TEMPLATE_TEX:=$(realpath templates/pandoc-latex-template/eisvogel.tex)
+FILTER_TABLEHTML2TEX:=$(realpath filters/table_html2tex.py)
 # All files dependend files
 COMMON_BASE:=$(realpath Makefile) $(DEFAULT_YAML) $(CROSSREF_YAML) \
-	$(TEMPLATE_TEX)
+	$(TEMPLATE_TEX) $(FILTER_TABLEHTML2TEX)
 
 # suffixs
 SG_SUF  := md
@@ -32,6 +33,9 @@ PANDOCOPT+=-d $(DEFAULT_YAML)
 ifdef TEMPLATE_TEX
 PANDOCOPT+=--template=$(TEMPLATE_TEX)
 endif
+
+PANDOCOPT+= \
+	--filter $(FILTER_TABLEHTML2TEX)
 
 # Set pandoc-crossref options
 PANDOCOPT+= \
