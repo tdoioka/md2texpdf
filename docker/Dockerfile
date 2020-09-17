@@ -75,7 +75,9 @@ RUN git clone https://github.com/jgm/pandocfilters.git -b ${VER_PANDOC_FILTERS} 
  && cd /usr/share/pandocfilters \
  && python setup.py install \
  && sed examples/plantuml.py \
-    -e "s@plantuml.jar@/usr/share/plantuml/plantuml.jar@g" \
+    -e 's@plantuml.jar@/usr/share/plantuml/plantuml.jar@g' \
+    -e 's@#!/usr/bin/env python@#!/usr/bin/env python3@g' \
+    -e 's@code\.encode(.*)$@code@g' \
     > /usr/local/bin/plantuml.py \
  && chmod a+x /usr/local/bin/plantuml.py
 

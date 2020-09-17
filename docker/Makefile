@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 IMG_NAME  ?= md2texpdf
-IMG_VER   ?= 0.7
+IMG_VER   ?= 0.8
 CONT_NAME ?= $(IMG_NAME)
 
 
